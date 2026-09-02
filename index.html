@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meridian — Channel Manager &amp; Hotel Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4EFE6;
+  --paper-2:#FBF8F2;
+  --card:#FFFDF9;
+  --ink:#171310;
+  --ink-2:#4A423A;
+  --ink-3:#8A7F72;
+  --rule:#E0D7C7;
+  --rule-2:#CDC0AB;
+  --clay:#BC4A26;
+  --clay-soft:#F0D9CE;
+  --pine:#1E5145;
+  --pine-soft:#D8E6E0;
+  --sun:#C98A15;
+  --stop:#8E1A16;
+  --ok:#2C6E49;
+  --shadow:0 1px 0 rgba(23,19,16,.06), 0 12px 28px -18px rgba(23,19,16,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:
+    radial-gradient(1200px 700px at 12% -10%, #FFFCF6 0%, rgba(255,252,246,0) 60%),
+    repeating-linear-gradient(0deg, rgba(23,19,16,.014) 0 1px, transparent 1px 4px),
+    var(--paper);
+  color:var(--ink);
+  font-family:"Archivo","Helvetica Neue",sans-serif;
+  font-size:13px;
+  -webkit-font-smoothing:antialiased;
+}
+.num{font-variant-numeric:tabular-nums lining-nums}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:212px 1fr;height:100vh;overflow:hidden}
+
+.rail{
+  background:#171310;
+  color:#EDE5D9;
+  display:flex;flex-direction:column;
+  border-right:1px solid #000;
+  position:relative;
+}
+.rail:after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px)}
+.brand{padding:20px 20px 18px;border-bottom:1px solid rgba(237,229,217,.12)}
+.brand .mark{
+  font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:22px;letter-spacing:-.4px;
+  display:flex;align-items:center;gap:9px;line-height:1
+}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--clay);box-shadow:0 0 0 3px rgba(188,74,38,.25)}
+.brand .sub{margin-top:7px;font-size:9.5px;letter-spacing:.19em;text-transform:uppercase;color:#9A8E7E}
+
+.navgrp{padding:16px 12px 4px;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#776C5D}
+.nav a{
+  display:flex;align-items:center;gap:10px;padding:8px 12px;margin:1px 8px;border-radius:7px;
+  color:#CFC4B4;text-decoration:none;font-size:12.5px;font-weight:500;cursor:pointer;
+  transition:background .16s ease,color .16s ease
+}
+.nav a svg{width:15px;height:15px;flex:none;opacity:.8}
+.nav a:hover{background:rgba(237,229,217,.07);color:#F6EFE3}
+.nav a.on{background:linear-gradient(90deg,rgba(188,74,38,.9),rgba(188,74,38,.55));color:#fff}
+.nav a.on svg{opacity:1}
+.nav .badge{margin-left:auto;background:rgba(255,255,255,.14);border-radius:20px;padding:1px 7px;font-size:10.5px}
+.rail-foot{margin-top:auto;padding:14px 16px;border-top:1px solid rgba(237,229,217,.12);font-size:11px;color:#8B8072}
+.rail-foot b{color:#EDE5D9;font-weight:600}
+
+.main{display:flex;flex-direction:column;overflow:hidden}
+
+/* ---------- topbar ---------- */
+.top{
+  display:flex;align-items:center;gap:14px;padding:12px 22px;
+  background:linear-gradient(180deg,var(--paper-2),rgba(251,248,242,.72));
+  border-bottom:1px solid var(--rule);backdrop-filter:blur(6px)
+}
+.prop{display:flex;align-items:center;gap:10px;border:1px solid var(--rule-2);background:var(--card);
+  border-radius:9px;padding:6px 11px;cursor:pointer;box-shadow:var(--shadow)}
+.prop .ini{width:26px;height:26px;border-radius:6px;background:var(--pine);color:#F2EDE3;
+  display:grid;place-items:center;font-weight:700;font-size:11px;letter-spacing:.5px}
+.prop .nm{font-weight:600;font-size:12.5px;line-height:1.15}
+.prop .mt{font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+.prop select{border:0;background:transparent;font:inherit;color:inherit;font-weight:600;outline:none;cursor:pointer}
+
+.syncstrip{margin-left:auto;display:flex;align-items:center;gap:7px}
+.chan{
+  display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
+  background:var(--card);border:1px solid var(--rule);border-radius:20px;padding:4px 10px 4px 7px;
+}
+.chan i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:block}
+.chan.warn i{background:var(--sun)}
+.chan.err i{background:var(--stop)}
+.chan.pushing i{background:var(--clay);animation:pulse .8s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.chan small{color:var(--ink-3);font-weight:500}
+
+.iconbtn{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--rule);
+  background:var(--card);border-radius:8px;cursor:pointer}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--clay);color:#fff;display:grid;
+  place-items:center;font-weight:700;font-size:11px}
+
+/* ---------- view header ---------- */
+.vhead{padding:20px 22px 14px;display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}
+h1{font-family:"Fraunces",Georgia,serif;font-weight:500;font-size:27px;margin:0;letter-spacing:-.5px}
+h1 em{font-style:italic;color:var(--clay)}
+.vhead p{margin:5px 0 0;color:var(--ink-3);font-size:12px;max-width:56ch}
+.tools{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{border:1px solid var(--rule-2);background:var(--card);border-radius:8px;padding:7px 12px;
+  font:inherit;font-weight:600;font-size:12px;cursor:pointer;box-shadow:var(--shadow);transition:.15s}
+.btn:hover{border-color:var(--ink-3)}
+.btn.pri{background:var(--ink);color:#F6EFE3;border-color:var(--ink)}
+.btn.pri:hover{background:#2B231C}
+.btn.clay{background:var(--clay);border-color:var(--clay);color:#fff}
+.seg{display:flex;border:1px solid var(--rule-2);border-radius:8px;overflow:hidden;background:var(--card)}
+.seg button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:600;padding:7px 11px;cursor:pointer;color:var(--ink-2)}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button.on{background:var(--ink);color:#F6EFE3}
+
+.scroll{overflow:auto;padding:0 22px 26px;flex:1}
+.view{display:none}
+.view.on{display:block;animation:rise .35s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
+
+/* ---------- ARI grid ---------- */
+.gridwrap{border:1px solid var(--rule-2);border-radius:12px;background:var(--card);
+  box-shadow:var(--shadow);overflow:auto;max-height:calc(100vh - 232px)}
+table.ari{border-collapse:separate;border-spacing:0;width:100%;min-width:1040px}
+.ari th,.ari td{border-bottom:1px solid var(--rule);padding:0;height:34px}
+.ari thead th{
+  position:sticky;top:0;z-index:5;background:var(--paper-2);
+  border-bottom:1px solid var(--rule-2);font-weight:600;font-size:11px;color:var(--ink-2);
+  padding:6px 4px;text-align:center;white-space:nowrap
+}
+.ari thead th.corner{left:0;z-index:7;text-align:left;padding-left:14px;min-width:238px;
+  border-right:1px solid var(--rule-2)}
+.ari thead th .dw{display:block;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+.ari thead th .dd{display:block;font-size:14px;font-family:"Fraunces",serif;font-weight:500;line-height:1.1}
+.ari thead th.we{background:#F0E9DB}
+.ari thead th.we .dw{color:var(--clay)}
+.ari td.lab,.ari th.lab{
+  position:sticky;left:0;background:var(--card);z-index:4;border-right:1px solid var(--rule-2);
+  padding:0 12px;min-width:238px;font-size:12px
+}
+tr.rt td.lab{background:#F2ECE0;font-weight:700}
+tr.rt td{background:#F2ECE0}
+tr.rt .rtname{display:flex;align-items:center;gap:8px;font-family:"Fraunces",serif;font-size:14px;letter-spacing:-.2px}
+tr.rt .rooms{font-family:"Archivo";font-size:10.5px;font-weight:600;color:var(--ink-3);
+  border:1px solid var(--rule-2);border-radius:5px;padding:1px 6px;flex:none;white-space:nowrap}
+tr.rt .rtname{justify-content:flex-start}
+.caret{width:0;height:0;border-left:5px solid var(--ink);border-top:4px solid transparent;
+  border-bottom:4px solid transparent;transition:transform .18s}
+tr.rt.open .caret{transform:rotate(90deg)}
+td.lab .sub{padding-left:18px;display:flex;align-items:center;gap:7px;color:var(--ink-2)}
+td.lab .tag{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);border:1px solid var(--rule-2);border-radius:4px;padding:1px 4px}
+
+td.c{text-align:center;cursor:cell;position:relative;user-select:none;transition:box-shadow .12s}
+td.c .v{display:block;font-size:12.5px;font-weight:600;line-height:34px}
+td.c.sel{box-shadow:inset 0 0 0 2px var(--clay);z-index:2}
+td.c.we{background:rgba(240,233,219,.5)}
+td.c:hover:not(.sel){box-shadow:inset 0 0 0 1px var(--rule-2)}
+td.c.pending{animation:flash 1.1s ease}
+@keyframes flash{0%{background:#FBE7B6}100%{background:transparent}}
+td.c.stopped .v{color:var(--stop)}
+td.c.stopped:after{content:"";position:absolute;inset:4px 2px;background:
+  repeating-linear-gradient(135deg,rgba(142,26,22,.16) 0 4px,transparent 4px 8px);pointer-events:none}
+tr.avail td.c .v{font-weight:700}
+tr.avail td.c.l0 .v{color:#9C9083}
+tr.avail td.c.l1{background:rgba(46,110,73,.10)}
+tr.avail td.c.l2{background:rgba(201,138,21,.16)}
+tr.avail td.c.l3{background:rgba(188,74,38,.20)}
+tr.avail td.c.l4{background:rgba(142,26,22,.26)}
+tr.avail td.c.l4 .v{color:#6E1310}
+tr.rate td.c .v:before{content:"₹";font-size:10px;color:var(--ink-3);margin-right:1px;font-weight:500}
+tr.minlos td.c .v{font-size:11.5px;color:var(--ink-2)}
+tr.sub td.lab{font-size:11.5px}
+tr.hi td{background:rgba(188,74,38,.045)}
+.occbar{height:5px;background:var(--rule);border-radius:3px;overflow:hidden;margin:0 5px}
+.occbar i{display:block;height:100%;background:var(--pine)}
+
+/* bulk bar */
+.bulk{
+  position:sticky;bottom:0;margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--ink);color:#F4EDE1;border-radius:11px;padding:11px 14px;box-shadow:0 18px 40px -20px rgba(0,0,0,.7);
+  transform:translateY(150%);transition:transform .28s cubic-bezier(.2,.9,.3,1.2)
+}
+.bulk.show{transform:none}
+.bulk .cnt{font-family:"Fraunces",serif;font-size:16px}
+.bulk .cnt b{color:#F0A882}
+.bulk label{font-size:11px;color:#B6A996;display:flex;align-items:center;gap:6px}
+.bulk input{width:82px;background:#241E18;border:1px solid #3B322A;color:#F7F1E6;border-radius:6px;
+  padding:6px 8px;font:inherit;font-weight:600;outline:none}
+.bulk input:focus{border-color:var(--clay)}
+.bulk .sp{width:1px;height:22px;background:#3B322A}
+.bulk .btn{background:#2A231D;border-color:#3B322A;color:#F4EDE1}
+.bulk .btn:hover{border-color:#6A5B4C}
+.bulk .btn.clay{background:var(--clay);border-color:var(--clay);color:#fff}
+.bulk .x{margin-left:auto;cursor:pointer;color:#B6A996;font-size:16px;line-height:1}
+
+/* legend */
+.legend{display:flex;gap:16px;align-items:center;margin:12px 2px 0;font-size:11px;color:var(--ink-3);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:block;border:1px solid var(--rule-2)}
+
+/* ---------- dashboard ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi{background:var(--card);border:1px solid var(--rule-2);border-radius:12px;padding:15px 16px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--clay)}
+.kpi:nth-child(2):before{background:var(--pine)}
+.kpi:nth-child(3):before{background:var(--sun)}
+.kpi:nth-child(4):before{background:var(--ink)}
+.kpi .k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.kpi .v{font-family:"Fraunces",serif;font-size:31px;font-weight:500;letter-spacing:-1px;margin:5px 0 2px}
+.kpi .d{font-size:11.5px;font-weight:600;color:var(--ok)}
+.kpi .d.dn{color:var(--stop)}
+.kpi .spark{position:absolute;right:12px;bottom:10px;display:flex;gap:2px;align-items:flex-end;height:30px;opacity:.5}
+.kpi .spark i{width:4px;background:var(--ink-3);border-radius:1px}
+
+.cols{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;margin-top:14px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--rule-2);border-radius:12px;box-shadow:var(--shadow)}
+.panel h3{margin:0;padding:13px 16px;border-bottom:1px solid var(--rule);font-size:12.5px;
+  display:flex;align-items:center;gap:8px}
+.panel h3 .r{margin-left:auto;font-size:11px;color:var(--ink-3);font-weight:500}
+.panel .body{padding:14px 16px}
+
+.chart{display:flex;align-items:flex-end;gap:6px;height:150px}
+.chart .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%}
+.chart .bar{width:100%;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--pine),#2F6E5F);
+  position:relative;transition:height .5s cubic-bezier(.2,.9,.3,1)}
+.chart .col.wk .bar{background:linear-gradient(180deg,var(--clay),#D06A45)}
+.chart .col small{font-size:9.5px;color:var(--ink-3)}
+.chart .bar span{position:absolute;top:-16px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:var(--ink-2)}
+
+table.list{width:100%;border-collapse:collapse;font-size:12px}
+table.list th{text-align:left;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);padding:0 10px 7px;border-bottom:1px solid var(--rule)}
+table.list td{padding:9px 10px;border-bottom:1px solid var(--rule)}
+table.list tr:last-child td{border-bottom:0}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:2px 8px;
+  border-radius:20px;border:1px solid}
+.pill.b{background:#E7EEFB;border-color:#C6D6F2;color:#22456F}
+.pill.a{background:#FDE9DE;border-color:#F3CDB6;color:#8F3A15}
+.pill.e{background:#E6F0EA;border-color:#C4DCCE;color:#1E5145}
+.pill.d{background:#F1ECE2;border-color:#DDD2C0;color:#5B5145}
+.pill.g{background:#F6E3E2;border-color:#EBC6C4;color:#8E1A16}
+.src{display:flex;align-items:center;gap:7px;font-weight:600}
+.src i{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-size:9px;
+  color:#fff;font-weight:700;letter-spacing:-.3px}
+
+.mix{display:flex;flex-direction:column;gap:11px}
+.mix .row{display:grid;grid-template-columns:96px 1fr 46px;align-items:center;gap:10px;font-size:11.5px}
+.mix .track{height:8px;background:var(--rule);border-radius:5px;overflow:hidden}
+.mix .track i{display:block;height:100%;border-radius:5px}
+.mix b{text-align:right;font-weight:700}
+
+/* ---------- housekeeping ---------- */
+.hkbar{display:flex;gap:9px;margin-bottom:14px;flex-wrap:wrap}
+.hkstat{background:var(--card);border:1px solid var(--rule-2);border-radius:10px;padding:9px 14px;
+  box-shadow:var(--shadow);display:flex;align-items:center;gap:10px}
+.hkstat .n{font-family:"Fraunces",serif;font-size:21px;line-height:1}
+.hkstat .l{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.floor{margin-bottom:18px}
+.floor h4{font-family:"Fraunces",serif;font-weight:500;font-size:15px;margin:0 0 9px;
+  display:flex;align-items:center;gap:10px;color:var(--ink-2)}
+.floor h4:after{content:"";flex:1;height:1px;background:var(--rule)}
+.rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(154px,1fr));gap:9px}
+.room{background:var(--card);border:1px solid var(--rule-2);border-radius:10px;padding:10px 11px;
+  cursor:pointer;box-shadow:var(--shadow);transition:transform .14s,box-shadow .14s;position:relative;overflow:hidden}
+.room:hover{transform:translateY(-2px);box-shadow:0 10px 22px -14px rgba(23,19,16,.65)}
+.room .no{font-family:"Fraunces",serif;font-size:19px;font-weight:600;letter-spacing:-.5px}
+.room .ty{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+.room .who{font-size:11px;color:var(--ink-2);margin-top:7px;display:flex;align-items:center;gap:5px}
+.room .bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+.room.clean .bar{background:var(--ok)} .room.dirty .bar{background:var(--clay)}
+.room.insp .bar{background:var(--pine)} .room.ooo .bar{background:var(--stop)}
+.room.occ .bar{background:#22456F}
+.room .st{position:absolute;right:9px;top:9px}
+.hint{font-size:11px;color:var(--ink-3);margin:0 0 12px}
+.footnote{margin:18px 2px 0;font-size:11px;color:var(--ink-3);border-top:1px dashed var(--rule-2);padding-top:10px}
+
+/* ---------- restaurant POS ---------- */
+.pos{display:grid;grid-template-columns:1fr 344px;gap:14px;align-items:start}
+.outlets{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.outlets button{
+  font:inherit;font-weight:600;font-size:12px;cursor:pointer;
+  background:var(--card);border:1px solid var(--rule-2);color:var(--ink-2);
+  padding:7px 13px;border-radius:999px}
+.outlets button.on{background:var(--ink);border-color:var(--ink);color:#FBF8F2}
+.tables{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;margin-bottom:16px}
+.tbl{
+  position:relative;background:var(--card);border:1px solid var(--rule);border-radius:12px;
+  padding:11px 10px 10px;cursor:pointer;text-align:left;font:inherit;
+  transition:transform .12s ease, box-shadow .12s ease, border-color .12s}
+.tbl:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.tbl .tn{font-family:"Fraunces",Georgia,serif;font-size:17px;font-weight:600;line-height:1}
+.tbl .tm{font-size:10.5px;color:var(--ink-3);margin-top:4px}
+.tbl .amt{font-size:11.5px;font-weight:700;margin-top:6px}
+.tbl.open{border-color:var(--clay);background:linear-gradient(180deg,#FFF6F1,var(--card))}
+.tbl.open .amt{color:var(--clay)}
+.tbl.free .amt{color:var(--ink-3);font-weight:500}
+.tbl.sel{border-color:var(--ink);box-shadow:0 0 0 2px rgba(23,19,16,.14)}
+.tbl .dotmark{position:absolute;right:9px;top:10px;width:7px;height:7px;border-radius:50%;background:var(--rule-2)}
+.tbl.open .dotmark{background:var(--clay)}
+.cats{display:flex;gap:7px;margin:0 0 10px;flex-wrap:wrap}
+.cats button{font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;padding:6px 11px;border-radius:8px;
+  background:transparent;border:1px solid var(--rule-2);color:var(--ink-3)}
+.cats button.on{background:var(--pine-soft);border-color:var(--pine);color:var(--pine)}
+.menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+.mi{background:var(--card);border:1px solid var(--rule);border-radius:11px;padding:10px 11px;cursor:pointer;
+  text-align:left;font:inherit;display:flex;flex-direction:column;gap:5px;min-height:70px;
+  transition:transform .1s ease, border-color .1s}
+.mi:hover{transform:translateY(-1px);border-color:var(--rule-2)}
+.mi:active{transform:scale(.985)}
+.mi .n{font-weight:600;font-size:12.5px;line-height:1.25}
+.mi .p{margin-top:auto;font-weight:700;font-size:12px}
+.mi .veg{width:9px;height:9px;border:1.5px solid var(--ok);display:inline-block;position:relative;top:-1px;margin-right:5px;border-radius:2px}
+.mi .veg:after{content:"";position:absolute;inset:1.5px;border-radius:50%;background:var(--ok)}
+.mi .veg.nv{border-color:var(--stop)} .mi .veg.nv:after{background:var(--stop)}
+.ticket{background:var(--card);border:1px solid var(--rule);border-radius:14px;box-shadow:var(--shadow);
+  position:sticky;top:0;display:flex;flex-direction:column;max-height:calc(100vh - 210px)}
+.ticket .th{padding:13px 14px 11px;border-bottom:1px dashed var(--rule-2)}
+.ticket .th b{font-family:"Fraunces",Georgia,serif;font-size:16px;font-weight:600}
+.ticket .th .sub{font-size:11px;color:var(--ink-3);margin-top:3px}
+.lines{overflow:auto;padding:6px 8px;flex:1;min-height:120px}
+.line{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 6px;border-bottom:1px solid var(--rule)}
+.line:last-child{border-bottom:0}
+.line .ln{font-weight:600;font-size:12.5px}
+.line .lp{font-weight:700;font-size:12.5px;text-align:right}
+.line .lq{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-3)}
+.line .lq button{width:19px;height:19px;border-radius:6px;border:1px solid var(--rule-2);background:var(--paper-2);
+  cursor:pointer;font:inherit;font-size:12px;line-height:1;color:var(--ink-2)}
+.line .kot{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ok);font-weight:700}
+.line .kot.pend{color:var(--sun)}
+.empty{padding:26px 14px;text-align:center;color:var(--ink-3);font-size:12px}
+.totals{border-top:1px dashed var(--rule-2);padding:11px 14px;font-size:12px}
+.totals .r{display:flex;justify-content:space-between;padding:3px 0;color:var(--ink-2)}
+.totals .r.grand{font-size:15px;font-weight:700;color:var(--ink);border-top:1px solid var(--rule);margin-top:7px;padding-top:9px}
+.tacts{padding:0 12px 13px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.tacts .btn{width:100%;justify-content:center;text-align:center}
+.tacts .wide{grid-column:1/-1}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);opacity:0;pointer-events:none;
+  background:var(--ink);color:#FBF8F2;padding:11px 18px;border-radius:10px;font-size:12.5px;font-weight:600;
+  box-shadow:0 14px 30px -12px rgba(23,19,16,.7);transition:opacity .22s ease, transform .22s ease;z-index:60}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.roompick{position:fixed;inset:0;background:rgba(23,19,16,.42);display:none;align-items:center;justify-content:center;z-index:70}
+.roompick.on{display:flex}
+.roompick .box{background:var(--card);border-radius:16px;width:min(460px,92vw);padding:18px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
+.roompick h4{margin:0 0 3px;font-family:"Fraunces",Georgia,serif;font-size:18px;font-weight:600}
+.roompick p{margin:0 0 13px;font-size:11.5px;color:var(--ink-3)}
+.roompick .glist{display:grid;gap:7px;max-height:44vh;overflow:auto}
+.roompick .g{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 11px;
+  border:1px solid var(--rule);border-radius:10px;cursor:pointer;background:var(--paper-2)}
+.roompick .g:hover{border-color:var(--ink);background:#fff}
+.roompick .g b{font-size:12.5px}
+.roompick .g small{color:var(--ink-3);font-size:11px}
+
+/* ---------- reports ---------- */
+.repchips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.repchips button{font:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:7px 13px;border-radius:999px;
+  background:var(--card);border:1px solid var(--rule-2);color:var(--ink-2)}
+.repchips button.on{background:var(--ink);border-color:var(--ink);color:#FBF8F2}
+.repgrid{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;align-items:start}
+.bars{display:flex;align-items:flex-end;gap:10px;height:190px;padding:10px 2px 0}
+.bars .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%}
+.bars .b .stack{width:100%;border-radius:6px 6px 0 0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.bars .b .stack i{display:block}
+.bars .b small{font-size:10.5px;color:var(--ink-3)}
+.bars .b .tot{font-size:10.5px;font-weight:700}
+.keys{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--ink-2);padding:10px 2px 0;border-top:1px solid var(--rule);margin-top:8px}
+.keys span{display:flex;align-items:center;gap:6px}
+.keys i{width:10px;height:10px;border-radius:3px;display:inline-block}
+table.rep{width:100%;border-collapse:collapse;font-size:12px}
+table.rep th{text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);
+  font-weight:700;padding:8px 10px;border-bottom:1px solid var(--rule-2)}
+table.rep td{padding:8px 10px;border-bottom:1px solid var(--rule)}
+table.rep tr:last-child td{border-bottom:0}
+table.rep td.n,table.rep th.n{text-align:right;font-variant-numeric:tabular-nums}
+table.rep tr.sum td{font-weight:700;background:var(--paper-2)}
+.delta{font-size:11px;font-weight:700}
+.delta.up{color:var(--ok)} .delta.dn{color:var(--stop)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark"><span class="dot"></span>Meridian</div>
+      <div class="sub">Channel Manager · PMS</div>
+    </div>
+    <div class="navgrp">Distribution</div>
+    <nav class="nav">
+      <a class="on" data-v="cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Rates &amp; Availability</a>
+      <a data-v="dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Dashboard</a>
+      <a data-v="cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>Channels<span class="badge">6</span></a>
+    </nav>
+    <div class="navgrp">Operations</div>
+    <nav class="nav">
+      <a data-v="dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6"/></svg>Front Desk</a>
+      <a data-v="hk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18M6 20V9l6-5 6 5v11"/><path d="M10 20v-5h4v5"/></svg>Housekeeping<span class="badge">14</span></a>
+      <a data-v="pos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5H4zM4 13h16v7H4z"/><path d="M8 9v4"/></svg>Restaurant POS<span class="badge">4</span></a>
+      <a data-v="rep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h14v18l-7-4-7 4z"/></svg>Reports</a>
+    </nav>
+    <div class="rail-foot">
+      <b>Grand Meridian Group</b><br>3 properties · 2 users online
+    </div>
+  </aside>
+
+  <section class="main">
+    <header class="top">
+      <div class="prop">
+        <span class="ini">GM</span>
+        <span>
+          <span class="nm"><select id="propsel">
+            <option>The Grand Meridian, Goa</option>
+            <option>Meridian Riverside, Kochi</option>
+            <option>Meridian Hilltop, Coorg</option>
+          </select></span>
+          <span class="mt num" id="propmeta">48 rooms · 5 room types · IST</span>
+        </span>
+      </div>
+      <div class="syncstrip" id="chanstrip">
+        <span class="chan" data-c="Booking.com"><i></i>Booking.com <small>2m</small></span>
+        <span class="chan" data-c="Expedia"><i></i>Expedia <small>2m</small></span>
+        <span class="chan" data-c="Agoda"><i></i>Agoda <small>5m</small></span>
+        <span class="chan warn" data-c="MMT"><i></i>MakeMyTrip <small>queued</small></span>
+        <span class="chan" data-c="Airbnb"><i></i>Airbnb <small>4m</small></span>
+        <span class="chan" data-c="Website"><i></i>Website <small>live</small></span>
+      </div>
+      <div class="iconbtn">?</div>
+      <div class="avatar">AR</div>
+    </header>
+
+    <div class="vhead">
+      <div>
+        <h1 id="vtitle">Rates &amp; <em>Availability</em></h1>
+        <p id="vsub">Fourteen days from 14 Sep. Click or drag to select cells, then push rates, inventory or stop-sell to every connected channel in one action.</p>
+      </div>
+      <div class="tools" id="tools">
+        <div class="seg" id="rangeseg"><button class="on">14 days</button><button>30 days</button><button>Month</button></div>
+        <button class="btn">Restrictions</button>
+        <button class="btn pri" id="pushall">Push all to channels</button>
+      </div>
+    </div>
+
+    <div class="scroll">
+
+      <!-- ============ CALENDAR ============ -->
+      <div class="view on" id="v-cal">
+        <div class="gridwrap">
+          <table class="ari" id="ari"></table>
+        </div>
+
+        <div class="bulk" id="bulk">
+          <span class="cnt"><b id="selcount">0</b> cells selected</span>
+          <span class="sp"></span>
+          <label>Rate <input id="bRate" class="num" placeholder="7,400"></label>
+          <label>Avail <input id="bAvail" class="num" placeholder="12"></label>
+          <label>Min LOS <input id="bLos" class="num" placeholder="2"></label>
+          <span class="sp"></span>
+          <button class="btn" id="bStop">Stop sell</button>
+          <button class="btn" id="bOpen">Open</button>
+          <button class="btn clay" id="bApply">Apply &amp; push</button>
+          <span class="x" id="bClose">✕</span>
+        </div>
+
+        <div class="legend">
+          <span><i style="background:rgba(46,110,73,.10)"></i>Healthy inventory</span>
+          <span><i style="background:rgba(201,138,21,.16)"></i>Filling up</span>
+          <span><i style="background:rgba(188,74,38,.20)"></i>Last rooms</span>
+          <span><i style="background:rgba(142,26,22,.26)"></i>Sold out</span>
+          <span><i style="background:repeating-linear-gradient(135deg,rgba(142,26,22,.3) 0 3px,transparent 3px 6px)"></i>Stop sell</span>
+          <span style="margin-left:auto">Every edit writes to the local ledger first, then pushes to the channel manager — nothing is lost if a channel is down.</span>
+        </div>
+        <p class="footnote">Demo build with sample data. Once your channel manager credentials are in, these same cells read and write live ARI.</p>
+      </div>
+
+      <!-- ============ DASHBOARD ============ -->
+      <div class="view" id="v-dash">
+        <div class="kpis">
+          <div class="kpi"><div class="k">Occupancy tonight</div><div class="v num">84%</div><div class="d">▲ 6 pts vs last week</div>
+            <div class="spark"><i style="height:40%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:70%"></i><i style="height:62%"></i><i style="height:85%"></i><i style="height:92%"></i></div></div>
+          <div class="kpi"><div class="k">ADR</div><div class="v num">₹7,180</div><div class="d">▲ 3.4%</div>
+            <div class="spark"><i style="height:50%"></i><i style="height:52%"></i><i style="height:60%"></i><i style="height:58%"></i><i style="height:68%"></i><i style="height:72%"></i><i style="height:75%"></i></div></div>
+          <div class="kpi"><div class="k">RevPAR</div><div class="v num">₹6,031</div><div class="d">▲ 9.1%</div>
+            <div class="spark"><i style="height:35%"></i><i style="height:48%"></i><i style="height:44%"></i><i style="height:66%"></i><i style="height:70%"></i><i style="height:78%"></i><i style="height:88%"></i></div></div>
+          <div class="kpi"><div class="k">Arrivals / departures</div><div class="v num">18 / 11</div><div class="d dn">4 unassigned rooms</div></div>
+        </div>
+
+        <div class="cols">
+          <div class="panel">
+            <h3>Forecast occupancy — next 14 nights <span class="r">Group total · 142 rooms</span></h3>
+            <div class="body"><div class="chart" id="chart"></div></div>
+          </div>
+          <div class="panel">
+            <h3>Channel mix <span class="r">Month to date</span></h3>
+            <div class="body mix">
+              <div class="row"><span>Booking.com</span><span class="track"><i style="width:38%;background:#22456F"></i></span><b class="num">38%</b></div>
+              <div class="row"><span>Direct / website</span><span class="track"><i style="width:22%;background:var(--pine)"></i></span><b class="num">22%</b></div>
+              <div class="row"><span>MakeMyTrip</span><span class="track"><i style="width:15%;background:var(--clay)"></i></span><b class="num">15%</b></div>
+              <div class="row"><span>Expedia</span><span class="track"><i style="width:11%;background:var(--sun)"></i></span><b class="num">11%</b></div>
+              <div class="row"><span>Agoda</span><span class="track"><i style="width:8%;background:#7C5CA8"></i></span><b class="num">8%</b></div>
+              <div class="row"><span>Airbnb</span><span class="track"><i style="width:6%;background:#B03A48"></i></span><b class="num">6%</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cols" style="grid-template-columns:1fr">
+          <div class="panel" style="margin-top:14px">
+            <h3>Latest reservations <span class="r">Auto-pulled from the channel manager every 2 minutes</span></h3>
+            <div class="body" style="padding-top:6px">
+              <table class="list">
+                <thead><tr><th>Reference</th><th>Guest</th><th>Source</th><th>Room type</th><th>Stay</th><th>Nights</th><th class="num">Value</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td class="num">MER-24817</td><td>R. Fernandes</td><td><span class="src"><i style="background:#22456F">BC</i>Booking.com</span></td><td>Deluxe Sea View</td><td class="num">18–21 Sep</td><td class="num">3</td><td class="num">₹23,400</td><td><span class="pill b">Confirmed</span></td></tr>
+                  <tr><td class="num">MER-24816</td><td>A. Kulkarni</td><td><span class="src"><i style="background:var(--clay)">MM</i>MakeMyTrip</span></td><td>Premier Balcony</td><td class="num">16–18 Sep</td><td class="num">2</td><td class="num">₹18,900</td><td><span class="pill b">Confirmed</span></td></tr>
+                  <tr><td class="num">MER-24815</td><td>J. Whitmore</td><td><span class="src"><i style="background:var(--pine)">WB</i>Website</span></td><td>Garden Suite</td><td class="num">14–19 Sep</td><td class="num">5</td><td class="num">₹61,250</td><td><span class="pill a">In house</span></td></tr>
+                  <tr><td class="num">MER-24814</td><td>S. Iyer</td><td><span class="src"><i style="background:var(--sun)">EX</i>Expedia</span></td><td>Deluxe Sea View</td><td class="num">15–17 Sep</td><td class="num">2</td><td class="num">₹15,600</td><td><span class="pill g">Cancelled</span></td></tr>
+                  <tr><td class="num">MER-24813</td><td>P. Nayar</td><td><span class="src"><i style="background:#7C5CA8">AG</i>Agoda</span></td><td>Standard Twin</td><td class="num">14–16 Sep</td><td class="num">2</td><td class="num">₹9,800</td><td><span class="pill e">Checked out</span></td></tr>
+                  <tr><td class="num">MER-24812</td><td>D. Mehta</td><td><span class="src"><i style="background:#B03A48">AB</i>Airbnb</span></td><td>Garden Suite</td><td class="num">20–24 Sep</td><td class="num">4</td><td class="num">₹49,000</td><td><span class="pill d">Awaiting payment</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ HOUSEKEEPING ============ -->
+      <div class="view" id="v-hk">
+        <div class="hkbar" id="hkbar"></div>
+        <p class="hint">Tap a room to move it through Dirty → Clean → Inspected. Status changes are what release the room back to the front desk, and the same board runs on a phone for attendants.</p>
+        <div id="floors"></div>
+      </div>
+
+      <!-- ============ RESTAURANT POS ============ -->
+      <div class="view" id="v-pos">
+        <div class="outlets" id="outlets">
+          <button class="on" data-o="Coastal Kitchen">Coastal Kitchen <small>· 24 covers</small></button>
+          <button data-o="Sundowner Bar">Sundowner Bar</button>
+          <button data-o="Room Service">Room Service</button>
+          <button data-o="Pool Deck">Pool Deck</button>
+        </div>
+
+        <div class="pos">
+          <div>
+            <div class="tables" id="tables"></div>
+            <div class="cats" id="cats"></div>
+            <div class="menu" id="menu"></div>
+            <p class="footnote">Tap a table, tap items to add them, then send the KOT to the kitchen. “Charge to room” posts the bill straight onto an in-house guest folio, so it settles at check-out with the room and the OTA commission still reconciled correctly.</p>
+          </div>
+
+          <aside class="ticket">
+            <div class="th">
+              <b id="tkTitle">Table 4</b>
+              <div class="sub" id="tkSub">Coastal Kitchen · 2 covers · opened 19:42</div>
+            </div>
+            <div class="lines" id="tkLines"></div>
+            <div class="totals" id="tkTotals"></div>
+            <div class="tacts">
+              <button class="btn" id="tkKot">Send KOT</button>
+              <button class="btn" id="tkSplit">Split bill</button>
+              <button class="btn clay wide" id="tkRoom">Charge to room</button>
+              <button class="btn pri wide" id="tkSettle">Settle &amp; print bill</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- ============ REPORTS ============ -->
+      <div class="view" id="v-rep">
+        <div class="repchips" id="repchips">
+          <button class="on" data-r="flash">Manager’s flash</button>
+          <button data-r="chan">Revenue by channel</button>
+          <button data-r="fb">F&amp;B sales</button>
+          <button data-r="hk">Housekeeping productivity</button>
+          <button data-r="tax">Tax summary (GST)</button>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="k">Room revenue — MTD</div><div class="v num">₹41.7L</div><div class="d">▲ 12.4% vs last month</div></div>
+          <div class="kpi"><div class="k">F&amp;B revenue — MTD</div><div class="v num">₹9.3L</div><div class="d">▲ 5.1%</div></div>
+          <div class="kpi"><div class="k">OTA commission</div><div class="v num">₹6.1L</div><div class="d dn">14.6% of room revenue</div></div>
+          <div class="kpi"><div class="k">Direct share</div><div class="v num">22%</div><div class="d">▲ 3 pts — target 30%</div></div>
+        </div>
+
+        <div class="repgrid" style="margin-top:14px">
+          <div class="panel">
+            <h3 id="repChartTitle">Revenue by night — last 14 days <span class="r">Rooms vs F&amp;B, ₹ thousands</span></h3>
+            <div class="body">
+              <div class="bars" id="repbars"></div>
+              <div class="keys">
+                <span><i style="background:#22456F"></i>Room revenue</span>
+                <span><i style="background:var(--clay)"></i>F&amp;B</span>
+                <span><i style="background:var(--sun)"></i>Other (spa, laundry, transfers)</span>
+                <span style="margin-left:auto;color:var(--ink-3)">Group total across 3 properties</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Export <span class="r">Scheduled or on demand</span></h3>
+            <div class="body">
+              <p class="hint" style="margin-top:0">Every report exports to CSV, Excel or a branded PDF, and can be emailed to owners on a schedule — night audit at 03:00, month-end on the 1st.</p>
+              <div class="tacts" style="padding:0;grid-template-columns:1fr 1fr">
+                <button class="btn" id="expCsv">Download CSV</button>
+                <button class="btn" id="expPdf">Branded PDF</button>
+                <button class="btn wide" id="expMail">Schedule to owners</button>
+              </div>
+              <div style="margin-top:14px;border-top:1px dashed var(--rule-2);padding-top:12px">
+                <div class="totals" style="border:0;padding:0">
+                  <div class="r"><span>Rooms sold (MTD)</span><b class="num">1,184</b></div>
+                  <div class="r"><span>Occupancy</span><b class="num">79.4%</b></div>
+                  <div class="r"><span>ADR</span><b class="num">₹7,180</b></div>
+                  <div class="r"><span>RevPAR</span><b class="num">₹5,701</b></div>
+                  <div class="r"><span>Average length of stay</span><b class="num">2.4 nights</b></div>
+                  <div class="r grand"><span>Total revenue MTD</span><b class="num">₹53.1L</b></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:14px">
+          <h3 id="repTableTitle">Segment performance <span class="r">Month to date vs same period last month</span></h3>
+          <div class="body" style="padding-top:6px">
+            <table class="rep" id="reptable"></table>
+          </div>
+        </div>
+        <p class="footnote">Demo figures. On your data these are computed from the reservations the channel manager sends plus the folio and POS postings — one source, so the flash report and the tax summary can never disagree.</p>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="roompick" id="roompick">
+  <div class="box">
+    <h4>Charge to room</h4>
+    <p>In-house guests only. The posting lands on the folio immediately and shows on the guest’s bill at check-out.</p>
+    <div class="glist" id="glist"></div>
+  </div>
+</div>
+
+<script>
+/* ---------------- data ---------------- */
+const DAYS = 14, START = new Date(2026,8,14); // 14 Sep 2026
+const dayList = [...Array(DAYS)].map((_,i)=>{const d=new Date(START);d.setDate(d.getDate()+i);return d;});
+const DW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+const roomTypes = [
+  {code:'DLX', name:'Deluxe Sea View',  rooms:16, base:7400,
+   plans:[{n:'Best Available',t:'BAR',m:0},{n:'Bed & Breakfast',t:'BB',m:900},{n:'Non-Refundable',t:'NR',m:-650}]},
+  {code:'PRM', name:'Premier Balcony',  rooms:12, base:9450,
+   plans:[{n:'Best Available',t:'BAR',m:0},{n:'Bed & Breakfast',t:'BB',m:900},{n:'Corporate',t:'COR',m:-1100}]},
+  {code:'STD', name:'Standard Twin',    rooms:14, base:4900,
+   plans:[{n:'Best Available',t:'BAR',m:0},{n:'Non-Refundable',t:'NR',m:-450}]},
+  {code:'SUI', name:'Garden Suite',     rooms:6,  base:12250,
+   plans:[{n:'Best Available',t:'BAR',m:0},{n:'Half Board',t:'HB',m:2400}]},
+];
+
+// deterministic pseudo-random so the demo looks the same every load
+let seed = 7;
+const rnd = ()=> (seed = (seed*1103515245+12345)%2147483648)/2147483648;
+
+const state = {};
+roomTypes.forEach(rt=>{
+  state[rt.code] = dayList.map((d,i)=>{
+    const we = d.getDay()===5||d.getDay()===6;
+    const sold = Math.min(rt.rooms, Math.round(rt.rooms*(we?0.86:0.6) + (rnd()*rt.rooms*0.28) - 1));
+    return {
+      avail: Math.max(0, rt.rooms - sold),
+      rate: Math.round((rt.base*(we?1.18:1) + (rnd()-.5)*500)/50)*50,
+      los: we?2:1,
+      stop:false
+    };
+  });
+});
+
+/* ---------------- ARI grid ---------------- */
+const ari = document.getElementById('ari');
+function fmt(n){return n.toLocaleString('en-IN')}
+function heat(a,rooms){const p=a/rooms; if(a===0)return'l4'; if(p<=.15)return'l3'; if(p<=.35)return'l2'; return 'l1';}
+
+function buildGrid(){
+  let h = '<thead><tr><th class="corner lab">Room type &amp; rate plan</th>';
+  dayList.forEach(d=>{
+    const we = d.getDay()===0||d.getDay()===6||d.getDay()===5;
+    h += `<th class="${we?'we':''}"><span class="dw">${DW[d.getDay()]}</span><span class="dd num">${d.getDate()}</span></th>`;
+  });
+  h += '</tr></thead><tbody>';
+
+  roomTypes.forEach(rt=>{
+    h += `<tr class="rt open" data-rt="${rt.code}"><td class="lab"><span class="rtname"><span class="caret"></span>${rt.name} <span class="rooms">${rt.rooms} rooms</span></span></td>`;
+    dayList.forEach((d,i)=>{
+      const s = state[rt.code][i], pct = Math.round((rt.rooms-s.avail)/rt.rooms*100);
+      h += `<td><div class="occbar" title="${pct}% sold"><i style="width:${pct}%"></i></div></td>`;
+    });
+    h += '</tr>';
+
+    // availability row
+    h += `<tr class="avail sub" data-rt="${rt.code}"><td class="lab"><span class="sub"><span class="tag">Inv</span>Rooms to sell</span></td>`;
+    dayList.forEach((d,i)=>{
+      const s=state[rt.code][i], we=d.getDay()===0||d.getDay()===6;
+      h += `<td class="c ${we?'we':''} ${heat(s.avail,rt.rooms)} ${s.stop?'stopped':''}" data-rt="${rt.code}" data-d="${i}" data-f="avail"><span class="v num">${s.avail}</span></td>`;
+    });
+    h += '</tr>';
+
+    // rate plan rows
+    rt.plans.forEach((p,pi)=>{
+      h += `<tr class="rate sub ${pi===0?'hi':''}" data-rt="${rt.code}"><td class="lab"><span class="sub"><span class="tag">${p.t}</span>${p.n}</span></td>`;
+      dayList.forEach((d,i)=>{
+        const s=state[rt.code][i], we=d.getDay()===0||d.getDay()===6;
+        h += `<td class="c ${we?'we':''} ${s.stop?'stopped':''}" data-rt="${rt.code}" data-d="${i}" data-f="rate" data-m="${p.m}"><span class="v num">${fmt(s.rate+p.m)}</span></td>`;
+      });
+      h += '</tr>';
+    });
+
+    // min LOS
+    h += `<tr class="minlos sub" data-rt="${rt.code}"><td class="lab"><span class="sub"><span class="tag">LOS</span>Minimum stay</span></td>`;
+    dayList.forEach((d,i)=>{
+      const s=state[rt.code][i], we=d.getDay()===0||d.getDay()===6;
+      h += `<td class="c ${we?'we':''}" data-rt="${rt.code}" data-d="${i}" data-f="los"><span class="v num">${s.los} night${s.los>1?'s':''}</span></td>`;
+    });
+    h += '</tr>';
+  });
+  ari.innerHTML = h + '</tbody>';
+}
+buildGrid();
+
+/* ---------------- selection ---------------- */
+const bulk = document.getElementById('bulk'), selcount = document.getElementById('selcount');
+let dragging = false, anchor = null;
+const sel = () => [...ari.querySelectorAll('td.c.sel')];
+function refresh(){
+  const n = sel().length;
+  selcount.textContent = n;
+  bulk.classList.toggle('show', n>0);
+}
+function clearSel(){ sel().forEach(c=>c.classList.remove('sel')); refresh(); }
+
+ari.addEventListener('mousedown', e=>{
+  const td = e.target.closest('td.c'); if(!td) return;
+  e.preventDefault();
+  if(!e.shiftKey && !e.metaKey) clearSel();
+  dragging = true; anchor = td; td.classList.add('sel'); refresh();
+});
+ari.addEventListener('mouseover', e=>{
+  if(!dragging) return;
+  const td = e.target.closest('td.c'); if(!td || !anchor) return;
+  const rows = [...ari.querySelectorAll('tr')];
+  const r1 = rows.indexOf(anchor.parentElement), r2 = rows.indexOf(td.parentElement);
+  const c1 = +anchor.dataset.d, c2 = +td.dataset.d;
+  const [ra,rb] = [Math.min(r1,r2),Math.max(r1,r2)], [ca,cb] = [Math.min(c1,c2),Math.max(c1,c2)];
+  ari.querySelectorAll('td.c').forEach(c=>{
+    const ri = rows.indexOf(c.parentElement), ci = +c.dataset.d;
+    if(ri>=ra&&ri<=rb&&ci>=ca&&ci<=cb) c.classList.add('sel');
+  });
+  refresh();
+});
+document.addEventListener('mouseup', ()=> dragging=false);
+document.getElementById('bClose').onclick = clearSel;
+
+/* collapse a room type */
+ari.addEventListener('click', e=>{
+  const rt = e.target.closest('tr.rt'); if(!rt) return;
+  const open = rt.classList.toggle('open');
+  ari.querySelectorAll(`tr.sub[data-rt="${rt.dataset.rt}"]`).forEach(r=>r.style.display = open?'':'none');
+});
+
+/* ---------------- bulk apply ---------------- */
+function pushToChannels(cells){
+  cells.forEach(c=>{ c.classList.remove('pending'); void c.offsetWidth; c.classList.add('pending'); });
+  const strip = [...document.querySelectorAll('.chan')];
+  strip.forEach((ch,i)=>setTimeout(()=>{
+    ch.classList.add('pushing'); ch.querySelector('small').textContent='pushing';
+    setTimeout(()=>{ ch.classList.remove('pushing','warn'); ch.querySelector('small').textContent='just now'; }, 700+i*160);
+  }, i*90));
+}
+document.getElementById('bApply').onclick = ()=>{
+  const r = document.getElementById('bRate').value.replace(/[^\d]/g,'');
+  const a = document.getElementById('bAvail').value.replace(/[^\d]/g,'');
+  const l = document.getElementById('bLos').value.replace(/[^\d]/g,'');
+  const cells = sel();
+  cells.forEach(c=>{
+    const s = state[c.dataset.rt][+c.dataset.d], f = c.dataset.f;
+    if(f==='rate' && r){ s.rate = +r; c.querySelector('.v').textContent = fmt(+r + (+c.dataset.m||0)); }
+    if(f==='avail' && a){
+      s.avail = +a; c.querySelector('.v').textContent = a;
+      const rt = roomTypes.find(x=>x.code===c.dataset.rt);
+      c.className = c.className.replace(/\bl[0-4]\b/,'') + ' ' + heat(+a, rt.rooms);
+    }
+    if(f==='los' && l){ s.los = +l; c.querySelector('.v').textContent = l + (l>1?' nights':' night'); }
+  });
+  pushToChannels(cells);
+};
+function setStop(on){
+  const cells = sel();
+  const keys = new Set(cells.map(c=>c.dataset.rt+'|'+c.dataset.d));
+  cells.forEach(c=> state[c.dataset.rt][+c.dataset.d].stop = on);
+  ari.querySelectorAll('td.c').forEach(c=>{
+    if(keys.has(c.dataset.rt+'|'+c.dataset.d)) c.classList.toggle('stopped', on);
+  });
+  pushToChannels(cells);
+}
+document.getElementById('bStop').onclick = ()=>setStop(true);
+document.getElementById('bOpen').onclick = ()=>setStop(false);
+document.getElementById('pushall').onclick = ()=>pushToChannels([]);
+
+/* ---------------- dashboard chart ---------------- */
+const chart = document.getElementById('chart');
+chart.innerHTML = dayList.map((d,i)=>{
+  const totalRooms = roomTypes.reduce((s,r)=>s+r.rooms,0);
+  const soldPct = Math.round(roomTypes.reduce((s,r)=>s+(r.rooms-state[r.code][i].avail),0)/totalRooms*100);
+  const we = d.getDay()===5||d.getDay()===6;
+  return `<div class="col ${we?'wk':''}"><div class="bar" style="height:${soldPct}%"><span class="num">${soldPct}</span></div><small class="num">${d.getDate()}</small></div>`;
+}).join('');
+
+/* ---------------- housekeeping ---------------- */
+const STATUSES = [
+  {k:'dirty', l:'Dirty',      cls:'pill a'},
+  {k:'clean', l:'Clean',      cls:'pill e'},
+  {k:'insp',  l:'Inspected',  cls:'pill b'},
+];
+const attendants = ['Sunita','Meena','Rakesh','Joana','Priya'];
+const hkRooms = [];
+[1,2,3].forEach(fl=>{
+  for(let i=1;i<=12;i++){
+    const no = fl*100+i;
+    const roll = rnd();
+    let st = roll<.34?'dirty': roll<.62?'clean': roll<.82?'insp': roll<.94?'occ':'ooo';
+    hkRooms.push({no, fl, st, ty:['Deluxe Sea View','Premier Balcony','Standard Twin','Garden Suite'][i%4],
+                  who: attendants[i%attendants.length]});
+  }
+});
+function labelFor(st){
+  if(st==='occ') return '<span class="pill b">Occupied</span>';
+  if(st==='ooo') return '<span class="pill g">Out of order</span>';
+  return `<span class="${STATUSES.find(s=>s.k===st).cls}">${STATUSES.find(s=>s.k===st).l}</span>`;
+}
+function renderHK(){
+  const c = {dirty:0,clean:0,insp:0,occ:0,ooo:0};
+  hkRooms.forEach(r=>c[r.st]++);
+  document.getElementById('hkbar').innerHTML = `
+    <div class="hkstat"><span class="n num">${c.dirty}</span><span class="l">Dirty</span></div>
+    <div class="hkstat"><span class="n num">${c.clean}</span><span class="l">Clean</span></div>
+    <div class="hkstat"><span class="n num">${c.insp}</span><span class="l">Inspected</span></div>
+    <div class="hkstat"><span class="n num">${c.occ}</span><span class="l">Occupied</span></div>
+    <div class="hkstat"><span class="n num">${c.ooo}</span><span class="l">Out of order</span></div>
+    <div class="hkstat" style="border-style:dashed"><span class="n num">11</span><span class="l">Departures to clean by 2pm</span></div>`;
+  document.getElementById('floors').innerHTML = [1,2,3].map(fl=>`
+    <div class="floor"><h4>Floor ${fl}</h4><div class="rooms">${
+      hkRooms.filter(r=>r.fl===fl).map(r=>`
+        <div class="room ${r.st}" data-no="${r.no}">
+          <span class="bar"></span><span class="st">${labelFor(r.st)}</span>
+          <div class="no num">${r.no}</div><div class="ty">${r.ty}</div>
+          <div class="who">👤 ${r.st==='occ'?'In house · do not disturb':r.who}</div>
+        </div>`).join('')
+    }</div></div>`).join('');
+}
+renderHK();
+document.getElementById('floors').addEventListener('click', e=>{
+  const el = e.target.closest('.room'); if(!el) return;
+  const r = hkRooms.find(x=>x.no === +el.dataset.no);
+  if(r.st==='occ'||r.st==='ooo') return;
+  r.st = r.st==='dirty' ? 'clean' : r.st==='clean' ? 'insp' : 'dirty';
+  renderHK();
+});
+
+/* ---------------- toast ---------------- */
+const toastEl = document.getElementById('toast');
+let toastT = null;
+function say(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('on');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>toastEl.classList.remove('on'), 2600);
+}
+
+/* ---------------- restaurant POS ---------------- */
+const MENU = [
+  {c:'Starters', n:'Goan Prawn Balchão',      p:520, v:false},
+  {c:'Starters', n:'Kokum Chilli Paneer',     p:380, v:true},
+  {c:'Starters', n:'Rava Fried Calamari',     p:560, v:false},
+  {c:'Starters', n:'Beetroot & Feta Salad',   p:340, v:true},
+  {c:'Mains',    n:'Fish Curry Rice Thali',   p:640, v:false},
+  {c:'Mains',    n:'Chicken Cafreal',         p:590, v:false},
+  {c:'Mains',    n:'Mushroom Xacuti',         p:470, v:true},
+  {c:'Mains',    n:'Butter Chicken',          p:610, v:false},
+  {c:'Mains',    n:'Dal Meridian',            p:330, v:true},
+  {c:'Mains',    n:'Wood-fired Margherita',   p:520, v:true},
+  {c:'Breads & Rice', n:'Butter Naan',        p:90,  v:true},
+  {c:'Breads & Rice', n:'Goan Poi',           p:70,  v:true},
+  {c:'Breads & Rice', n:'Prawn Pulao',        p:420, v:false},
+  {c:'Breads & Rice', n:'Steamed Rice',       p:180, v:true},
+  {c:'Desserts', n:'Bebinca',                 p:290, v:true},
+  {c:'Desserts', n:'Alphonso Kulfi',          p:240, v:true},
+  {c:'Beverages', n:'Fresh Lime Soda',        p:180, v:true},
+  {c:'Beverages', n:'Feni Sour',              p:490, v:true},
+  {c:'Beverages', n:'Kingfisher Draught',     p:350, v:true},
+  {c:'Beverages', n:'Filter Coffee',          p:150, v:true},
+];
+const CATS = [...new Set(MENU.map(m=>m.c))];
+
+const tables = [
+  {no:'T1',  seats:2, outlet:'Coastal Kitchen', open:true,  since:'19:20', lines:[{n:'Goan Prawn Balchão',p:520,q:1,kot:true},{n:'Fish Curry Rice Thali',p:640,q:2,kot:true},{n:'Fresh Lime Soda',p:180,q:2,kot:true}]},
+  {no:'T2',  seats:4, outlet:'Coastal Kitchen', open:false, since:'',      lines:[]},
+  {no:'T3',  seats:4, outlet:'Coastal Kitchen', open:true,  since:'19:35', lines:[{n:'Kokum Chilli Paneer',p:380,q:1,kot:true},{n:'Butter Naan',p:90,q:4,kot:false}]},
+  {no:'T4',  seats:2, outlet:'Coastal Kitchen', open:true,  since:'19:42', lines:[{n:'Chicken Cafreal',p:590,q:1,kot:true},{n:'Steamed Rice',p:180,q:1,kot:true},{n:'Bebinca',p:290,q:1,kot:false}]},
+  {no:'T5',  seats:6, outlet:'Coastal Kitchen', open:false, since:'',      lines:[]},
+  {no:'T6',  seats:4, outlet:'Coastal Kitchen', open:false, since:'',      lines:[]},
+  {no:'T7',  seats:2, outlet:'Coastal Kitchen', open:true,  since:'20:04', lines:[{n:'Wood-fired Margherita',p:520,q:1,kot:false}]},
+  {no:'T8',  seats:8, outlet:'Coastal Kitchen', open:false, since:'',      lines:[]},
+  {no:'B1',  seats:3, outlet:'Sundowner Bar',   open:true,  since:'19:58', lines:[{n:'Feni Sour',p:490,q:3,kot:true}]},
+  {no:'B2',  seats:3, outlet:'Sundowner Bar',   open:false, since:'',      lines:[]},
+  {no:'B3',  seats:2, outlet:'Sundowner Bar',   open:false, since:'',      lines:[]},
+  {no:'214', seats:2, outlet:'Room Service',    open:true,  since:'20:11', lines:[{n:'Butter Chicken',p:610,q:1,kot:true},{n:'Butter Naan',p:90,q:2,kot:true}]},
+  {no:'305', seats:2, outlet:'Room Service',    open:false, since:'',      lines:[]},
+  {no:'P1', seats:4, outlet:'Pool Deck',        open:false, since:'',      lines:[]},
+  {no:'P2', seats:4, outlet:'Pool Deck',        open:false, since:'',      lines:[]},
+];
+const inHouse = [
+  {room:'214', name:'J. Whitmore',  ref:'MER-24815', bal:61250},
+  {room:'108', name:'A. Kulkarni',  ref:'MER-24816', bal:18900},
+  {room:'301', name:'R. Fernandes', ref:'MER-24817', bal:23400},
+  {room:'112', name:'S. Rebello',   ref:'MER-24802', bal:12800},
+];
+let outlet = 'Coastal Kitchen';
+let cat = CATS[0];
+let cur = tables.find(t=>t.no==='T4');
+
+const money = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const lineTotal = t => t.lines.reduce((s,l)=>s+l.p*l.q, 0);
+
+function renderTables(){
+  const list = tables.filter(t=>t.outlet===outlet);
+  document.getElementById('tables').innerHTML = list.map(t=>`
+    <button class="tbl ${t.open?'open':'free'} ${cur&&cur.no===t.no?'sel':''}" data-t="${t.no}">
+      <span class="dotmark"></span>
+      <div class="tn num">${t.no}</div>
+      <div class="tm">${t.outlet==='Room Service'?'Room service':t.seats+' seats'}${t.open?' · '+t.since:''}</div>
+      <div class="amt num">${t.open?money(lineTotal(t)):'Free'}</div>
+    </button>`).join('');
+}
+function renderMenu(){
+  document.getElementById('cats').innerHTML = CATS.map(c=>
+    `<button class="${c===cat?'on':''}" data-c="${c}">${c}</button>`).join('');
+  document.getElementById('menu').innerHTML = MENU.filter(m=>m.c===cat).map(m=>`
+    <button class="mi" data-n="${m.n}" data-p="${m.p}">
+      <span class="n"><i class="veg ${m.v?'':'nv'}"></i>${m.n}</span>
+      <span class="p num">${money(m.p)}</span>
+    </button>`).join('');
+}
+function renderTicket(){
+  const t = cur;
+  document.getElementById('tkTitle').textContent =
+    t.outlet==='Room Service' ? 'Room '+t.no : 'Table '+t.no;
+  document.getElementById('tkSub').textContent =
+    `${t.outlet} · ${t.seats} covers${t.open?' · opened '+t.since:' · not opened'}`;
+
+  document.getElementById('tkLines').innerHTML = t.lines.length ? t.lines.map((l,i)=>`
+    <div class="line">
+      <span class="ln">${l.n}</span>
+      <span class="lp num">${money(l.p*l.q)}</span>
+      <span class="lq">
+        <button data-i="${i}" data-d="-1">−</button>
+        <b class="num">${l.q}</b>
+        <button data-i="${i}" data-d="1">+</button>
+        <span style="margin-left:6px">× ${money(l.p)}</span>
+      </span>
+      <span class="kot ${l.kot?'':'pend'}">${l.kot?'KOT sent':'not sent'}</span>
+    </div>`).join('') : '<div class="empty">No items yet.<br>Tap a dish to start the ticket.</div>';
+
+  const sub = lineTotal(t);
+  const svc = sub*0.10;
+  const gst = (sub+svc)*0.05;
+  document.getElementById('tkTotals').innerHTML = `
+    <div class="r"><span>Subtotal</span><b class="num">${money(sub)}</b></div>
+    <div class="r"><span>Service charge 10%</span><b class="num">${money(svc)}</b></div>
+    <div class="r"><span>GST 5%</span><b class="num">${money(gst)}</b></div>
+    <div class="r grand"><span>Total</span><b class="num">${money(sub+svc+gst)}</b></div>`;
+}
+function renderPOS(){ renderTables(); renderMenu(); renderTicket(); }
+renderPOS();
+
+document.getElementById('outlets').onclick = e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#outlets button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  outlet = b.dataset.o;
+  const first = tables.filter(t=>t.outlet===outlet);
+  cur = first.find(t=>t.open) || first[0];
+  renderPOS();
+};
+document.getElementById('tables').onclick = e=>{
+  const b = e.target.closest('.tbl'); if(!b) return;
+  cur = tables.find(t=>t.no===b.dataset.t);
+  renderPOS();
+};
+document.getElementById('cats').onclick = e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  cat = b.dataset.c; renderMenu();
+};
+document.getElementById('menu').onclick = e=>{
+  const b = e.target.closest('.mi'); if(!b) return;
+  const n = b.dataset.n, p = +b.dataset.p;
+  if(!cur.open){ cur.open = true; cur.since = '20:26'; }
+  const ex = cur.lines.find(l=>l.n===n && !l.kot);
+  if(ex) ex.q++; else cur.lines.push({n, p, q:1, kot:false});
+  renderPOS();
+};
+document.getElementById('tkLines').onclick = e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  const l = cur.lines[+b.dataset.i];
+  l.q += +b.dataset.d;
+  if(l.q <= 0) cur.lines.splice(+b.dataset.i, 1);
+  if(!cur.lines.length){ cur.open = false; cur.since=''; }
+  renderPOS();
+};
+document.getElementById('tkKot').onclick = ()=>{
+  const pend = cur.lines.filter(l=>!l.kot);
+  if(!pend.length){ say('Nothing new to fire — kitchen already has this ticket.'); return; }
+  pend.forEach(l=>l.kot = true);
+  renderPOS();
+  say(`KOT printed in the kitchen — ${pend.reduce((s,l)=>s+l.q,0)} item(s) fired for ${cur.outlet==='Room Service'?'room':'table'} ${cur.no}`);
+};
+document.getElementById('tkSplit').onclick = ()=>{
+  if(!cur.lines.length){ say('Open a ticket first.'); return; }
+  say('Split bill — demo screen. Real build splits by cover, by item or by percentage.');
+};
+document.getElementById('tkSettle').onclick = ()=>{
+  if(!cur.lines.length){ say('Nothing to settle on this table.'); return; }
+  const total = lineTotal(cur)*1.155;
+  cur.lines = []; cur.open = false; cur.since = '';
+  renderPOS();
+  say(`Bill settled — ${money(total)} posted to the day’s F&B revenue.`);
+};
+
+/* charge to room */
+const pick = document.getElementById('roompick');
+document.getElementById('tkRoom').onclick = ()=>{
+  if(!cur.lines.length){ say('Add items before charging a room.'); return; }
+  document.getElementById('glist').innerHTML = inHouse.map(g=>`
+    <div class="g" data-room="${g.room}">
+      <span><b>Room ${g.room} — ${g.name}</b><br><small>${g.ref} · folio balance ${money(g.bal)}</small></span>
+      <span class="btn">Post</span>
+    </div>`).join('');
+  pick.classList.add('on');
+};
+pick.onclick = e=>{
+  if(e.target === pick){ pick.classList.remove('on'); return; }
+  const g = e.target.closest('.g'); if(!g) return;
+  const guest = inHouse.find(x=>x.room===g.dataset.room);
+  const total = lineTotal(cur)*1.155;
+  guest.bal += total;
+  cur.lines = []; cur.open = false; cur.since = '';
+  pick.classList.remove('on');
+  renderPOS();
+  say(`${money(total)} posted to room ${guest.room} — ${guest.name}. Folio now ${money(guest.bal)}.`);
+};
+
+/* ---------------- reports ---------------- */
+const repSeed = (()=>{ let s = 21; return ()=> (s = (s*1103515245+12345)%2147483648)/2147483648; })();
+const repDays = dayList.map((d,i)=>{
+  const we = d.getDay()===5||d.getDay()===6;
+  const rooms = Math.round((we?520:380) + repSeed()*90);
+  return {d, rooms, fb: Math.round(rooms*(0.2+repSeed()*0.08)), oth: Math.round(rooms*(0.05+repSeed()*0.04))};
+});
+function renderBars(){
+  const max = Math.max(...repDays.map(r=>r.rooms+r.fb+r.oth));
+  document.getElementById('repbars').innerHTML = repDays.map(r=>{
+    const tot = r.rooms+r.fb+r.oth, h = tot/max*100;
+    return `<div class="b">
+      <span class="tot num">${tot}</span>
+      <div class="stack" style="height:${h}%">
+        <i style="background:var(--sun);height:${r.oth/tot*100}%"></i>
+        <i style="background:var(--clay);height:${r.fb/tot*100}%"></i>
+        <i style="background:#22456F;height:${r.rooms/tot*100}%"></i>
+      </div>
+      <small class="num">${r.d.getDate()}</small>
+    </div>`;
+  }).join('');
+}
+const REPORTS = {
+  flash: {title:'Revenue by night — last 14 days', sub:'Rooms vs F&amp;B, ₹ thousands', tt:'Segment performance',
+    head:['Segment','Room nights','ADR','Revenue','vs last month'],
+    rows:[['OTA — Booking.com','412','₹7,420','₹30.6L','+8.1%'],['OTA — MakeMyTrip','163','₹6,980','₹11.4L','+2.4%'],
+          ['OTA — Expedia / Agoda','206','₹7,010','₹14.4L','−1.2%'],['Direct / website','238','₹7,690','₹18.3L','+19.6%'],
+          ['Corporate & MICE','121','₹6,240','₹7.5L','+4.8%'],['Walk-in','44','₹5,900','₹2.6L','−6.3%']],
+    sum:['Total','1,184','₹7,180','₹85.0L','+9.4%']},
+  chan: {title:'Net revenue after commission', sub:'Gross vs net, by channel', tt:'Commission leakage',
+    head:['Channel','Gross','Commission %','Commission ₹','Net to hotel'],
+    rows:[['Booking.com','₹30.6L','15%','₹4.59L','₹26.0L'],['MakeMyTrip','₹11.4L','18%','₹2.05L','₹9.35L'],
+          ['Expedia','₹8.9L','16%','₹1.42L','₹7.48L'],['Agoda','₹5.5L','17%','₹0.94L','₹4.56L'],
+          ['Airbnb','₹4.2L','14%','₹0.59L','₹3.61L'],['Direct / website','₹18.3L','2.2% (PG)','₹0.40L','₹17.9L']],
+    sum:['Total','₹78.9L','—','₹9.99L','₹68.9L']},
+  fb: {title:'F&amp;B revenue by outlet', sub:'Covers, average cheque and revenue', tt:'Outlet performance',
+    head:['Outlet','Covers','Avg cheque','Revenue','Charged to room'],
+    rows:[['Coastal Kitchen','1,942','₹1,180','₹22.9L','38%'],['Sundowner Bar','864','₹940','₹8.1L','52%'],
+          ['Room Service','611','₹720','₹4.4L','96%'],['Pool Deck','403','₹660','₹2.7L','41%'],
+          ['Banquets','2 events','—','₹6.4L','0%']],
+    sum:['Total','3,820','₹1,062','₹44.5L','44%']},
+  hk: {title:'Rooms cleaned per attendant', sub:'Last 14 days', tt:'Housekeeping productivity',
+    head:['Attendant','Rooms cleaned','Avg minutes/room','Inspection pass','Re-cleans'],
+    rows:[['Sunita R.','214','26','98%','3'],['Meena D.','198','29','96%','7'],['Rakesh P.','186','31','94%','11'],
+          ['Joana F.','203','27','97%','5'],['Priya S.','171','33','92%','14']],
+    sum:['Team','972','29','95.4%','40']},
+  tax: {title:'GST collected — output tax', sub:'By rate slab', tt:'Tax summary',
+    head:['Head','Taxable value','Rate','CGST','SGST'],
+    rows:[['Room tariff below ₹7,500','₹18.2L','12%','₹1.09L','₹1.09L'],['Room tariff ₹7,500 and above','₹36.4L','18%','₹3.28L','₹3.28L'],
+          ['Restaurant (non-AC)','₹6.1L','5%','₹0.15L','₹0.15L'],['Restaurant (AC / bar)','₹31.2L','5%','₹0.78L','₹0.78L'],
+          ['Other services','₹4.7L','18%','₹0.42L','₹0.42L']],
+    sum:['Total','₹96.6L','—','₹5.72L','₹5.72L']},
+};
+function renderRep(key){
+  const r = REPORTS[key];
+  document.getElementById('repChartTitle').innerHTML = `${r.title} <span class="r">${r.sub}</span>`;
+  document.getElementById('repTableTitle').innerHTML = `${r.tt} <span class="r">Month to date vs same period last month</span>`;
+  const cell = (v,i)=>{
+    const num = i>0;
+    if(typeof v === 'string' && /^[+−-]\d/.test(v))
+      return `<td class="n"><span class="delta ${v[0]==='+'?'up':'dn'}">${v}</span></td>`;
+    return `<td class="${num?'n num':''}">${v}</td>`;
+  };
+  document.getElementById('reptable').innerHTML =
+    `<thead><tr>${r.head.map((h,i)=>`<th class="${i>0?'n':''}">${h}</th>`).join('')}</tr></thead>` +
+    `<tbody>${r.rows.map(row=>`<tr>${row.map(cell).join('')}</tr>`).join('')}` +
+    `<tr class="sum">${r.sum.map(cell).join('')}</tr></tbody>`;
+  renderBars();
+}
+renderRep('flash');
+document.getElementById('repchips').onclick = e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#repchips button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  renderRep(b.dataset.r);
+};
+document.getElementById('expCsv').onclick  = ()=>say('CSV export — wired to real data in the build, not in this demo.');
+document.getElementById('expPdf').onclick  = ()=>say('Branded PDF export — hotel logo and colours per property.');
+document.getElementById('expMail').onclick = ()=>say('Scheduled email to owners — nightly 03:00 and month-end.');
+
+/* ---------------- view switching ---------------- */
+const TITLES = {
+  cal:['Rates &amp; <em>Availability</em>','Fourteen days from 14 Sep. Click or drag to select cells, then push rates, inventory or stop-sell to every connected channel in one action.'],
+  dash:['Property <em>Dashboard</em>','Live pace, channel mix and the reservations pulled in from every OTA — one screen for the whole group or one property at a time.'],
+  hk:['<em>Housekeeping</em> Board','Room status drives what the front desk can sell. Attendants update from their phone; the board and the PMS stay in step.'],
+  pos:['Restaurant <em>POS</em>','Tables, KOT to the kitchen, split bills — and charge-to-room posting straight onto the guest folio so F&B settles with the room.'],
+  rep:['<em>Reports</em>','Manager’s flash, channel commission, F&B and tax — built from the same ledger the front desk and the channel manager write to.']
+};
+document.querySelectorAll('.nav a').forEach(a=>a.onclick = ()=>{
+  document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('on'));
+  a.classList.add('on');
+  const v = a.dataset.v;
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  document.getElementById('v-'+v).classList.add('on');
+  document.getElementById('vtitle').innerHTML = TITLES[v][0];
+  document.getElementById('vsub').textContent = TITLES[v][1];
+  document.getElementById('tools').style.visibility = v==='cal' ? 'visible' : 'hidden';
+});
+document.getElementById('propsel').onchange = e=>{
+  const meta = {0:'48 rooms · 5 room types · IST',1:'52 rooms · 4 room types · IST',2:'42 rooms · 4 room types · IST'};
+  document.getElementById('propmeta').textContent = meta[e.target.selectedIndex];
+};
+document.querySelectorAll('#rangeseg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#rangeseg button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+});
+</script>
+</body>
+</html>
